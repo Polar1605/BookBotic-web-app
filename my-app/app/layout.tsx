@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ClerkProvider, Show, SignInButton, SignUpButton, UserButton } from '@clerk/nextjs'
 import './globals.css'
+import Link from "next/link";
 
 export default function RootLayout({
   children,
@@ -12,18 +13,29 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ClerkProvider>
-          <header className="flex justify-end items-center p-4 gap-4 h-16">
-            <Show when="signed-out">
-              <SignInButton />
+          <header className="flex justify-between">
+            <div className="flex items-center py-4 pr-4 gap-4 h-25">
+              <Link href="/">
+                <img src="/bookbotics_logo.png" alt="BookBotics" className="h-25" />
+              </Link>
+            </div>
+            <div className="flex items-center p-4 gap-4 h-25">
+              <Show when="signed-out">
+              <SignInButton>
+                <button className="bg-[#1A6FDB] text-white rounded-full font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 cursor-pointer">
+                  Sign In
+                </button>
+              </SignInButton>
               <SignUpButton>
-                <button className="bg-[#6c47ff] text-white rounded-full font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 cursor-pointer">
+                <button className="bg-[#1A6FDB] text-white rounded-full font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 cursor-pointer">
                   Sign Up
                 </button>
               </SignUpButton>
             </Show>
             <Show when="signed-in">
-              <UserButton />
+              <UserButton appearance={{elements: {avatarBox: {width: 40, height: 40}}}} />
             </Show>
+            </div>
           </header>
           {children}
         </ClerkProvider>
