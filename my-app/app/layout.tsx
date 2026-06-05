@@ -13,11 +13,16 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ClerkProvider>
-          <header className="flex justify-between">
-            <div className="flex items-center py-4 pr-4 gap-4 h-25">
+          <header className="flex justify-between bg-[#383838]">
+            <div className="flex items-center py-4 pr-4 gap-12 h-25">
               <Link href="/">
-                <img src="/bookbotics_logo.png" alt="BookBotics" className="h-25" />
+                <img src="/bookbotic_robot.png" alt="BookBotics" className="h-30 w-30" />
               </Link>
+              <Show when="signed-in">
+                <Link href="/Account" className="text-white rounded-full font-medium text-sm sm:text-base cursor-pointer">Account</Link>
+                <Link href="/Dashboard" className="text-white rounded-full font-medium text-sm sm:text-base cursor-pointer">Dashboard</Link>
+                <Link href="/AI_Assistant" className="text-white rounded-full font-medium text-sm sm:text-base cursor-pointer">AI Assistant</Link>
+              </Show>
             </div>
             <div className="flex items-center p-4 gap-4 h-25">
               <Show when="signed-out">
