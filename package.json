@@ -1,5 +1,5 @@
 {
-  "name": "my-app",
+  "name": "bookbotic-web-app",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@clerk/nextjs": "^7.3.7",
+    "@elevenlabs/react": "^1.6.4",
     "next": "16.2.6",
     "react": "19.2.4",
     "react-dom": "19.2.4"
