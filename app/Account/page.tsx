@@ -9,7 +9,7 @@ export default function Home() {
       <div className="w-full max-w-3xl">
         <div className="mb-0 flex justify-center">
           <Image
-            src="/bookBotics_logo.png"
+            src="/bookbotics_logo.png"
             alt="BookBotics logo"
             width={500}
             height={100}

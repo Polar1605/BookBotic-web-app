@@ -11,9 +11,11 @@
   "dependencies": {
     "@clerk/nextjs": "^7.3.7",
     "@elevenlabs/react": "^1.6.4",
+    "@supabase/supabase-js": "^2.108.2",
     "next": "16.2.6",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "svix": "^1.95.2"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
