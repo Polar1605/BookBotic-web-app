@@ -3,6 +3,32 @@ import { auth } from '@clerk/nextjs/server'
 import { type ElevenLabs, ElevenLabsClient } from '@elevenlabs/elevenlabs-js'
 import { createServerSupabaseClient } from '@/Backend/supabase-server'
 
+const aiNameFields = [
+  'ai name',
+  'ai_name',
+  'assistant name',
+  'assistant_name',
+  'agent name',
+  'agent_name',
+  'name',
+] as const
+
+const agentPromptFields = ['agent prompt', 'agent_prompt', 'prompt'] as const
+
+function getStringField(data: Record<string, unknown>, fields: readonly string[]) {
+  return fields
+    .map((field) => data[field])
+    .find((value): value is string => typeof value === 'string')
+}
+
+function resolveAiName(data: Record<string, unknown>) {
+  return getStringField(data, aiNameFields) ?? ''
+}
+
+function resolveAgentPrompt(data: Record<string, unknown>) {
+  return getStringField(data, agentPromptFields) ?? ''
+}
+
 export async function createAgentAction() {
   const { userId } = await auth()
   if (!userId) throw new Error('Not authenticated')
@@ -13,8 +39,9 @@ export async function createAgentAction() {
     .from('tenants')
     .select('*')
     .eq('id', userId)
-    .single()
+    .maybeSingle()
   if (selErr) throw selErr
+  if (!tenant) throw new Error('Tenant record not found during agent creation')
 
   const elevenlabs = new ElevenLabsClient()
 
@@ -49,7 +76,7 @@ export async function createAgentAction() {
             date: { type: 'string' as const, description: 'Date in YYYY-MM-DD format' },
             time: { type: 'string' as const, description: 'Time in HH:MM 24-hour format' },
             customer_name: { type: 'string' as const, description: 'Full name of the customer' },
-            phone_number: {type: 'string' as const, description: 'Phone number of the customer'},
+            phone_number: { type: 'string' as const, description: 'Phone number of the customer' },
             duration_minutes: { type: 'number' as const, description: 'Duration in minutes, default 60' },
           } as Record<string, ElevenLabs.LiteralJsonSchemaProperty>,
           required: ['date', 'time', 'customer_name'],
@@ -58,36 +85,41 @@ export async function createAgentAction() {
     },
   ]
 
-  if(!tenant.elevenlabs_agent_id) {
+  const aiName = resolveAiName(tenant as Record<string, unknown>)
+  const agentPrompt = resolveAgentPrompt(tenant as Record<string, unknown>)
+  const agentId = (tenant as any)['elevenlabs_agent_id'] ?? (tenant as any)['elevenlabs agent id'] ?? null
+
+  if (!agentId) {
     const response = await elevenlabs.conversationalAi.agents.create({
-    name: `BookBotics - ${tenant.business_name}`,
-    conversationConfig: {
-      tts: { voiceId: 'Gubgw9l4dtIoQA9YZHgx', modelId: 'eleven_flash_v2' },
-      agent: {
-        firstMessage: `Hi, this is Rachel from ${tenant}. How can I help you today?`,
-        prompt: { prompt: tenant.agent_prompt, tools: calendarTools },
+      name: aiName ? `BookBotics - ${aiName}` : `BookBotics - ${tenant.business_name}`,
+      conversationConfig: {
+        tts: { voiceId: 'Gubgw9l4dtIoQA9YZHgx', modelId: 'eleven_flash_v2' },
+        agent: {
+          firstMessage: `Hi, this is Rachel from ${tenant.business_name}. How can I help you today?`,
+          prompt: { prompt: agentPrompt, tools: calendarTools },
+        },
       },
-    },
-  })
+    })
 
     const { error: updErr } = await supabase
       .from('tenants')
       .update({ elevenlabs_agent_id: response.agentId })
       .eq('id', userId)
     if (updErr) throw updErr
+    return response.agentId
   }
 
-  else {
-    await elevenlabs.conversationalAi.agents.update(`${tenant}`, {
-      name: `BookBotics - ${tenant}`,
-      conversationConfig: {
-        tts: { voiceId: 'Gubgw9l4dtIoQA9YZHgx', modelId: 'eleven_flash_v2' },
-        agent: {
-          firstMessage: `Hi, this is Rachel from ${tenant.business_name}. How can I help you today?`,
-          prompt: { prompt: tenant.agent_prompt, tools: calendarTools },
-        },
+  await elevenlabs.conversationalAi.agents.update(agentId, {
+    name: aiName ? `BookBotics - ${aiName}` : `BookBotics - ${tenant.business_name}`,
+    conversationConfig: {
+      tts: { voiceId: 'Gubgw9l4dtIoQA9YZHgx', modelId: 'eleven_flash_v2' },
+      agent: {
+        firstMessage: `Hi, this is Rachel from ${tenant.business_name}. How can I help you today?`,
+        prompt: { prompt: agentPrompt, tools: calendarTools },
       },
-    });
+    },
+  })
 
-  }
+  return agentId
 }
+
