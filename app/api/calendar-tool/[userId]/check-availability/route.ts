@@ -6,6 +6,7 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ userId: string }> }
 ) {
+  try {
   const { userId } = await params
   const { date } = await req.json()
 
@@ -43,6 +44,10 @@ export async function POST(
   return NextResponse.json({
     result: `On ${date}, the calendar is busy during: ${busyTimes}. All other times are available.`,
   })
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err)
+    return NextResponse.json({ error: message }, { status: 500 })
+  }
 }
 
 function fmt(dateStr: string) {
