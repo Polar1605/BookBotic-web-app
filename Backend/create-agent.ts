@@ -13,22 +13,6 @@ const aiNameFields = [
   'name',
 ] as const
 
-const agentPromptFields = ['agent prompt', 'agent_prompt', 'prompt'] as const
-
-function getStringField(data: Record<string, unknown>, fields: readonly string[]) {
-  return fields
-    .map((field) => data[field])
-    .find((value): value is string => typeof value === 'string')
-}
-
-function resolveAiName(data: Record<string, unknown>) {
-  return getStringField(data, aiNameFields) ?? ''
-}
-
-function resolveAgentPrompt(data: Record<string, unknown>) {
-  return getStringField(data, agentPromptFields) ?? ''
-}
-
 export async function createAgentAction() {
   const { userId } = await auth()
   if (!userId) throw new Error('Not authenticated')
@@ -85,18 +69,16 @@ export async function createAgentAction() {
     },
   ]
 
-  const aiName = resolveAiName(tenant as Record<string, unknown>)
-  const agentPrompt = resolveAgentPrompt(tenant as Record<string, unknown>)
   const agentId = (tenant as any)['elevenlabs_agent_id'] ?? (tenant as any)['elevenlabs agent id'] ?? null
 
   if (!agentId) {
     const response = await elevenlabs.conversationalAi.agents.create({
-      name: aiName ? `BookBotics - ${aiName}` : `BookBotics - ${tenant.business_name}`,
+      name: `BookBotics - ${tenant.business_name}`,
       conversationConfig: {
         tts: { voiceId: 'Gubgw9l4dtIoQA9YZHgx', modelId: 'eleven_flash_v2' },
         agent: {
-          firstMessage: `Hi, this is Rachel from ${tenant.business_name}. How can I help you today?`,
-          prompt: { prompt: agentPrompt, tools: calendarTools },
+          firstMessage: `Hi, this is ${tenant.ai_name} from ${tenant.business_name}. How can I help you today?`,
+          prompt: { prompt: tenant.agent_prompt,  llm: 'claude-haiku-4-5', tools: calendarTools },
         },
       },
     })
@@ -106,20 +88,17 @@ export async function createAgentAction() {
       .update({ elevenlabs_agent_id: response.agentId })
       .eq('id', userId)
     if (updErr) throw updErr
-    return response.agentId
-  }
-
-  await elevenlabs.conversationalAi.agents.update(agentId, {
-    name: aiName ? `BookBotics - ${aiName}` : `BookBotics - ${tenant.business_name}`,
-    conversationConfig: {
-      tts: { voiceId: 'Gubgw9l4dtIoQA9YZHgx', modelId: 'eleven_flash_v2' },
-      agent: {
-        firstMessage: `Hi, this is Rachel from ${tenant.business_name}. How can I help you today?`,
-        prompt: { prompt: agentPrompt, tools: calendarTools },
+  } else {
+    await elevenlabs.conversationalAi.agents.update(agentId, {
+      name: `BookBotics - ${tenant.business_name}`,
+      conversationConfig: {
+        tts: { voiceId: 'Gubgw9l4dtIoQA9YZHgx', modelId: 'eleven_flash_v2' },
+        agent: {
+          firstMessage: `Hi, this is ${tenant.ai_name} from ${tenant.business_name}. How can I help you today?`,
+          prompt: { prompt: tenant.agent_prompt, llm: 'claude-haiku-4-5', tools: calendarTools },
+        },
       },
-    },
-  })
-
-  return agentId
+    })
+  }
 }
 

@@ -62,7 +62,7 @@ export async function PATCH(req: Request) {
 
   const fieldsToUpdate: Record<string, string> = {}
   if (typeof body.business_name === 'string') fieldsToUpdate['business_name'] = body.business_name
-  if (typeof body.ai_name === 'string') fieldsToUpdate['ai name'] = body.ai_name
+  if (typeof body.ai_name === 'string') fieldsToUpdate['ai_name'] = body.ai_name
   if (typeof body.agent_prompt === 'string') fieldsToUpdate['agent_prompt'] = body.agent_prompt
 
   if (Object.keys(fieldsToUpdate).length === 0) {
