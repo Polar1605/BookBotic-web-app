@@ -29,7 +29,7 @@ export async function createAgentAction() {
 
   const elevenlabs = new ElevenLabsClient()
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL
+  const appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? '').replace(/\/$/, '')
   const calendarTools = [
     {
       type: 'webhook' as const,
